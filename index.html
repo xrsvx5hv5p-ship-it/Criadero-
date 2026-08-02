@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Paridera — Control de chanchas</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Paridera">
+<meta name="theme-color" content="#1E1B17">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1E1B17;
+    --surface:#26221C;
+    --surface-2:#322C23;
+    --line:#453D31;
+    --text:#F1E9D8;
+    --text-dim:#AC9F87;
+    --accent:#D9A441;
+    --accent-ink:#2A1E0B;
+    --sage:#8A9B6E;
+    --ok:#7E9A72;
+    --warn:#D98A3D;
+    --danger:#C1543A;
+    --empty:#5B5648;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Public Sans',system-ui,sans-serif;
+    -webkit-tap-highlight-color:transparent;
+    min-height:100vh;
+  }
+  h1,h2,h3{font-family:'Zilla Slab',serif;margin:0;}
+  input,textarea,select,button{font-family:inherit;font-size:16px;color:var(--text);}
+  input,textarea,select{
+    background:var(--bg);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:10px 11px;
+    width:100%;
+  }
+  input:focus,textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:0;}
+  label{display:block;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--text-dim);margin-bottom:5px;font-weight:600;}
+  button{cursor:pointer;border:none;font-weight:600;}
+  .field{margin-bottom:14px;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+
+  /* ---------- header ---------- */
+  header{
+    position:sticky;top:0;z-index:20;
+    background:var(--surface);
+    border-bottom:1px solid var(--line);
+    padding:14px 16px;
+    display:flex;align-items:center;gap:14px;
+  }
+  .brand{display:flex;align-items:center;gap:10px;flex:1;min-width:0;}
+  .brand svg{flex-shrink:0;}
+  .brand h1{font-size:21px;font-weight:700;color:var(--text);letter-spacing:.01em;}
+  .brand .sub{font-size:11.5px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-top:1px;}
+  .iconbtn{
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-radius:8px;
+    width:42px;height:42px;
+    display:flex;align-items:center;justify-content:center;
+    color:var(--text);
+    flex-shrink:0;
+  }
+  .btn{
+    background:var(--accent);
+    color:var(--accent-ink);
+    border-radius:8px;
+    padding:11px 16px;
+    display:flex;align-items:center;gap:7px;
+    font-size:14.5px;
+    white-space:nowrap;
+  }
+  .btn.secondary{background:var(--surface-2);color:var(--text);border:1px solid var(--line);}
+  .btn.danger{background:var(--danger);color:#fff;}
+  .btn:active{transform:translateY(1px);}
+
+  /* ---------- toolbar ---------- */
+  .toolbar{
+    display:flex;gap:10px;padding:12px 16px;flex-wrap:wrap;
+    border-bottom:1px solid var(--line);background:var(--bg);
+    position:sticky;top:73px;z-index:19;
+  }
+  .toolbar input[type=search]{flex:1;min-width:150px;}
+  .toolbar select{width:auto;flex-shrink:0;}
+
+  /* ---------- grid ---------- */
+  main{padding:16px;max-width:1100px;margin:0 auto;}
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+    gap:14px;
+  }
+  .empty-state{
+    text-align:center;padding:60px 20px;color:var(--text-dim);
+  }
+  .empty-state svg{opacity:.5;margin-bottom:14px;}
+  .empty-state p{font-size:15px;max-width:320px;margin:0 auto;}
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px 14px 14px;
+    position:relative;
+    overflow:hidden;
+    text-align:left;
+  }
+  .card::before{
+    content:'';position:absolute;left:0;top:0;bottom:0;width:5px;
+    background:var(--tab-color,var(--empty));
+  }
+  .card .num{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:24px;font-weight:600;color:var(--text);
+    display:flex;align-items:baseline;gap:6px;
+  }
+  .card .num small{font-size:12px;color:var(--text-dim);font-weight:400;}
+  .card .raza{font-size:13px;color:var(--text-dim);margin-top:2px;min-height:16px;}
+  .stamp{
+    position:absolute;top:12px;right:-6px;
+    border:2px solid var(--stamp-color,var(--empty));
+    color:var(--stamp-color,var(--empty));
+    font-family:'Zilla Slab',serif;
+    font-weight:700;
+    font-size:10.5px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    padding:3px 9px 2px;
+    border-radius:3px;
+    transform:rotate(4deg);
+    background:rgba(0,0,0,.15);
+  }
+  .card .dateline{
+    margin-top:14px;font-size:12.5px;color:var(--text-dim);
+    border-top:1px dashed var(--line);padding-top:10px;
+  }
+  .card .dateline b{color:var(--text);font-weight:600;}
+  .card .litter{font-family:'IBM Plex Mono',monospace;font-size:12px;margin-top:6px;color:var(--text-dim);}
+  .card .litter b{color:var(--accent);}
+
+  /* ---------- overlay / modal ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,.55);
+    z-index:50;display:flex;justify-content:flex-end;
+  }
+  .overlay.center{justify-content:center;align-items:center;padding:16px;}
+  .panel{
+    background:var(--bg);
+    width:100%;max-width:560px;height:100%;
+    overflow-y:auto;
+    border-left:1px solid var(--line);
+  }
+  .overlay.center .panel{
+    height:auto;max-height:90vh;border-left:none;border-radius:12px;border:1px solid var(--line);
+  }
+  .panel-header{
+    position:sticky;top:0;background:var(--surface);
+    border-bottom:1px solid var(--line);
+    padding:16px;display:flex;align-items:center;gap:12px;z-index:2;
+  }
+  .panel-header h2{font-size:19px;flex:1;}
+  .panel-body{padding:16px;}
+
+  details{
+    background:var(--surface);border:1px solid var(--line);
+    border-radius:8px;margin-bottom:10px;overflow:hidden;
+  }
+  details[open]{padding-bottom:14px;}
+  summary{
+    padding:13px 14px;font-family:'Zilla Slab',serif;font-weight:600;font-size:15.5px;
+    cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;
+    color:var(--text);
+  }
+  summary::-webkit-details-marker{display:none;}
+  summary .chev{transition:transform .15s;color:var(--text-dim);}
+  details[open] summary .chev{transform:rotate(90deg);}
+  .details-inner{padding:2px 14px 4px;}
+  .hint{font-size:11.5px;color:var(--text-dim);margin-top:-8px;margin-bottom:12px;}
+
+  .sanidad-item{
+    display:flex;gap:10px;align-items:center;
+    background:var(--bg);border:1px solid var(--line);border-radius:6px;
+    padding:9px 10px;margin-bottom:8px;font-size:13.5px;
+  }
+  .sanidad-item .d{font-family:'IBM Plex Mono',monospace;color:var(--accent);font-size:12px;white-space:nowrap;}
+  .sanidad-item .desc{flex:1;}
+  .sanidad-item button{background:none;color:var(--text-dim);padding:4px;}
+  .add-sanidad{display:flex;gap:8px;margin-top:8px;}
+  .add-sanidad input:first-child{flex:0 0 130px;}
+
+  .hist-item{
+    border-left:3px solid var(--line);padding:8px 0 8px 12px;margin-bottom:8px;font-size:13px;color:var(--text-dim);
+  }
+  .hist-item b{color:var(--text);}
+
+  .panel-footer{
+    position:sticky;bottom:0;background:var(--surface);
+    border-top:1px solid var(--line);padding:14px 16px;
+    display:flex;gap:10px;
+  }
+
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 18px;}
+  .pill{
+    font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+    padding:5px 10px;border-radius:20px;border:1.5px solid var(--pill-color,var(--empty));
+    color:var(--pill-color,var(--empty));
+  }
+
+  textarea{min-height:80px;resize:vertical;}
+
+  .settings-panel textarea{min-height:160px;font-family:'IBM Plex Mono',monospace;font-size:12px;}
+  .warn-banner{
+    background:var(--warn);color:#2A1E0B;font-size:12.5px;font-weight:600;
+    padding:10px 16px;text-align:center;
+  }
+
+  @media (max-width:480px){
+    .row2,.row3{grid-template-columns:1fr;}
+    header{padding:12px;}
+    .brand h1{font-size:18px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <svg width="34" height="34" viewBox="0 0 40 40" fill="none">
+      <rect x="3" y="14" width="34" height="20" rx="3" stroke="#D9A441" stroke-width="2"/>
+      <path d="M3 14L10 6H30L37 14" stroke="#D9A441" stroke-width="2" stroke-linejoin="round"/>
+      <circle cx="14" cy="24" r="2.4" fill="#D9A441"/>
+      <circle cx="26" cy="24" r="2.4" fill="#D9A441"/>
+      <path d="M17 30q3 2.5 6 0" stroke="#D9A441" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <h1>Paridera</h1>
+      <div class="sub" id="countSub">0 chanchas</div>
+    </div>
+  </div>
+  <button class="iconbtn" id="btnSettings" title="Copia de seguridad">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+  </button>
+  <button class="btn" id="btnNueva">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12h14"/></svg>
+    Nueva
+  </button>
+</header>
+
+<div class="warn-banner" id="storageBanner" style="display:none;">
+  Este navegador no permite guardar datos automáticamente (memoria bloqueada o modo privado). Usá "Exportar" seguido para no perder datos.
+</div>
+
+<div class="toolbar">
+  <input type="search" id="searchInput" placeholder="Buscar por número...">
+  <select id="filterSelect">
+    <option value="todas">Todos los estados</option>
+    <option value="vacia">Vacía</option>
+    <option value="gestando">Gestando</option>
+    <option value="porparir">Próxima a parir</option>
+    <option value="atrasada">Parto atrasado</option>
+    <option value="lactancia">Lactancia</option>
+    <option value="destetada">Lista p/ servicio</option>
+  </select>
+</div>
+
+<main>
+  <div class="grid" id="grid"></div>
+</main>
+
+<div id="modalRoot"></div>
+
+<script>
+(function(){
+  'use strict';
+
+  var STORAGE_KEY = 'chanchas_v1';
+  var GESTACION_DIAS = 114;
+  var hasStorage = (function(){
+    try{
+      var t = '__test__';
+      localStorage.setItem(t, '1');
+      localStorage.removeItem(t);
+      return true;
+    }catch(e){ return false; }
+  })();
+
+  var state = {
+    chanchas: [],
+    search: '',
+    filter: 'todas',
+    activeId: null,
+    settingsOpen: false,
+    loaded: false
+  };
+
+  // ---------- utils ----------
+  function uid(){ return 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+  function todayISO(){ var d = new Date(); return d.toISOString().slice(0,10); }
+  function addDaysISO(iso, days){
+    var d = new Date(iso + 'T00:00:00');
+    d.setDate(d.getDate() + days);
+    return d.toISOString().slice(0,10);
+  }
+  function daysDiff(isoA, isoB){
+    var a = new Date(isoA + 'T00:00:00');
+    var b = new Date(isoB + 'T00:00:00');
+    return Math.round((a - b) / 86400000);
+  }
+  function fmt(iso){
+    if(!iso) return '—';
+    var p = iso.split('-');
+    return p[2] + '/' + p[1] + '/' + p[0];
+  }
+  function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function nuevoCiclo(){
+    return {
+      fechaServicio:'', fechaProbableParto:'', fechaRealParto:'',
+      nacidosVivos:'', nacidosMuertos:'', nacidosMomificados:'',
+      pesoNacimiento:'', fechaDestete:'', lechonesDestetados:'', pesoDestete:'',
+      sanidad: [], observaciones:''
+    };
+  }
+  function nuevaChancha(numero){
+    return { id: uid(), numero: numero || '', raza:'', creada: todayISO(), ciclo: nuevoCiclo(), historial: [] };
+  }
+
+  function computeEstado(ciclo){
+    var today = todayISO();
+    if(!ciclo.fechaServicio) return {key:'vacia', label:'Vacía', color:'var(--empty)'};
+    if(ciclo.fechaServicio && !ciclo.fechaRealParto){
+      if(ciclo.fechaProbableParto){
+        var diff = daysDiff(today, ciclo.fechaProbableParto); // positive = ya pasó la fecha
+        if(diff > 3) return {key:'atrasada', label:'Parto atrasado', color:'var(--danger)'};
+        if(diff > -6) return {key:'porparir', label:'Próxima a parir', color:'var(--warn)'};
+      }
+      return {key:'gestando', label:'Gestando', color:'var(--sage)'};
+    }
+    if(ciclo.fechaRealParto && !ciclo.fechaDestete) return {key:'lactancia', label:'Lactancia', color:'var(--accent)'};
+    if(ciclo.fechaDestete) return {key:'destetada', label:'Lista p/ servicio', color:'var(--ok)'};
+    return {key:'vacia', label:'Vacía', color:'var(--empty)'};
+  }
+
+  function dateline(ciclo, estadoKey){
+    if(estadoKey === 'vacia') return 'Sin datos de servicio';
+    if(estadoKey === 'gestando' || estadoKey === 'porparir' || estadoKey === 'atrasada'){
+      return 'Parto probable: <b>' + fmt(ciclo.fechaProbableParto) + '</b>';
+    }
+    if(estadoKey === 'lactancia'){
+      return 'Parió: <b>' + fmt(ciclo.fechaRealParto) + '</b>';
+    }
+    if(estadoKey === 'destetada'){
+      return 'Destete: <b>' + fmt(ciclo.fechaDestete) + '</b>';
+    }
+    return '';
+  }
+
+  // ---------- persistence (localStorage: queda guardado en este navegador/tablet) ----------
+  function persist(){
+    if(!hasStorage){ return; }
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.chanchas));
+    }catch(e){
+      alert('No se pudo guardar (memoria del navegador llena o bloqueada). Hacé una exportación de respaldo desde el ícono de ajustes.');
+    }
+  }
+  function load(){
+    if(!hasStorage){
+      document.getElementById('storageBanner').style.display = 'block';
+      state.loaded = true;
+      render();
+      return;
+    }
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){ state.chanchas = JSON.parse(raw); }
+    }catch(e){ state.chanchas = []; }
+    state.loaded = true;
+    render();
+  }
+
+  // ---------- rendering: grid ----------
+  var grid = document.getElementById('grid');
+  var countSub = document.getElementById('countSub');
+
+  function filteredChanchas(){
+    return state.chanchas.filter(function(c){
+      if(state.search && c.numero.toLowerCase().indexOf(state.search.toLowerCase()) === -1) return false;
+      if(state.filter !== 'todas'){
+        var e = computeEstado(c.ciclo);
+        if(e.key !== state.filter) return false;
+      }
+      return true;
+    });
+  }
+
+  function renderGrid(){
+    var list = filteredChanchas();
+    countSub.textContent = state.chanchas.length + (state.chanchas.length === 1 ? ' chancha' : ' chanchas');
+
+    if(state.chanchas.length === 0){
+      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">' +
+        '<svg width="48" height="48" viewBox="0 0 40 40" fill="none"><rect x="3" y="14" width="34" height="20" rx="3" stroke="#AC9F87" stroke-width="2"/><path d="M3 14L10 6H30L37 14" stroke="#AC9F87" stroke-width="2" stroke-linejoin="round"/></svg>' +
+        '<p>Todavía no cargaste ninguna chancha. Tocá <b>+ Nueva</b> arriba para crear la primera ficha.</p></div>';
+      return;
+    }
+    if(list.length === 0){
+      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><p>No hay chanchas que coincidan con la búsqueda o el filtro.</p></div>';
+      return;
+    }
+
+    grid.innerHTML = list.map(function(c){
+      var e = computeEstado(c.ciclo);
+      var litter = '';
+      if(c.ciclo.fechaRealParto){
+        litter = '<div class="litter">Lechones: <b>' + (c.ciclo.nacidosVivos || 0) + '</b> vivos' +
+          (c.ciclo.nacidosMuertos ? ' · ' + c.ciclo.nacidosMuertos + ' muertos' : '') + '</div>';
+      }
+      return '<button class="card" data-open="' + c.id + '" style="--tab-color:' + e.color + '">' +
+        '<span class="stamp" style="--stamp-color:' + e.color + '">' + e.label + '</span>' +
+        '<div class="num">N.º ' + escapeHtml(c.numero || '?') + '</div>' +
+        '<div class="raza">' + escapeHtml(c.raza || '') + '</div>' +
+        litter +
+        '<div class="dateline">' + dateline(c.ciclo, e.key) + '</div>' +
+        '</button>';
+    }).join('');
+  }
+
+  // ---------- rendering: detail modal ----------
+  var modalRoot = document.getElementById('modalRoot');
+
+  function sanidadRows(ciclo){
+    if(!ciclo.sanidad.length) return '<div class="hint">Sin registros sanitarios todavía.</div>';
+    return ciclo.sanidad.map(function(s, i){
+      return '<div class="sanidad-item"><span class="d">' + fmt(s.fecha) + '</span>' +
+        '<span class="desc">' + escapeHtml(s.descripcion) + '</span>' +
+        '<button data-del-san="' + i + '" title="Eliminar"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6h16z"/></svg></button></div>';
+    }).join('');
+  }
+
+  function historialRows(hist){
+    if(!hist.length) return '<div class="hint">Sin ciclos anteriores registrados.</div>';
+    return hist.slice().reverse().map(function(h){
+      return '<div class="hist-item">' +
+        'Servicio <b>' + fmt(h.fechaServicio) + '</b> → Parto <b>' + fmt(h.fechaRealParto) + '</b><br>' +
+        'Lechones: <b>' + (h.nacidosVivos || 0) + '</b> vivos / ' + (h.nacidosMuertos || 0) + ' muertos' +
+        (h.fechaDestete ? ' · Destete: <b>' + fmt(h.fechaDestete) + '</b> (' + (h.lechonesDestetados || 0) + ')' : '') +
+        '</div>';
+    }).join('');
+  }
+
+  function renderModal(){
+    if(!state.activeId){ modalRoot.innerHTML = renderSettingsModal(); bindSettingsEvents(); return; }
+    var c = state.chanchas.find(function(x){ return x.id === state.activeId; });
+    if(!c){ state.activeId = null; modalRoot.innerHTML=''; return; }
+    var ciclo = c.ciclo;
+    var e = computeEstado(ciclo);
+
+    modalRoot.innerHTML =
+      '<div class="overlay" id="overlayDetail">' +
+        '<div class="panel">' +
+          '<div class="panel-header">' +
+            '<button class="iconbtn" id="btnClose"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>' +
+            '<h2>Chancha N.º ' + escapeHtml(c.numero || '?') + '</h2>' +
+            '<button class="iconbtn" id="btnDelete" title="Eliminar chancha"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6h16z"/></svg></button>' +
+          '</div>' +
+          '<div class="panel-body">' +
+
+            '<div class="badge-row"><span class="pill" style="--pill-color:' + e.color + '">' + e.label + '</span></div>' +
+
+            '<details open><summary>Datos generales <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg></summary>' +
+              '<div class="details-inner">' +
+                '<div class="row2">' +
+                  '<div class="field"><label>Número de chancha</label><input type="text" id="f_numero" value="' + escapeHtml(c.numero) + '"></div>' +
+                  '<div class="field"><label>Raza</label><input type="text" id="f_raza" value="' + escapeHtml(c.raza) + '"></div>' +
+                '</div>' +
+              '</div>' +
+            '</details>' +
+
+            '<details open><summary>Servicio y gestación <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg></summary>' +
+              '<div class="details-inner">' +
+                '<div class="row2">' +
+                  '<div class="field"><label>Fecha de servicio</label><input type="date" id="f_fechaServicio" value="' + ciclo.fechaServicio + '"></div>' +
+                  '<div class="field"><label>Parto probable</label><input type="date" id="f_fechaProbableParto" value="' + ciclo.fechaProbableParto + '"></div>' +
+                '</div>' +
+                '<div class="hint">El parto probable se calcula solo (114 días) al cargar el servicio. Se puede editar a mano.</div>' +
+              '</div>' +
+            '</details>' +
+
+            '<details' + (ciclo.fechaServicio ? ' open' : '') + '><summary>Parto y lechones <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg></summary>' +
+              '<div class="details-inner">' +
+                '<div class="field"><label>Fecha real de parto</label><input type="date" id="f_fechaRealParto" value="' + ciclo.fechaRealParto + '"></div>' +
+                '<div class="row3">' +
+                  '<div class="field"><label>Nacidos vivos</label><input type="number" min="0" id="f_nacidosVivos" value="' + ciclo.nacidosVivos + '"></div>' +
+                  '<div class="field"><label>Nacidos muertos</label><input type="number" min="0" id="f_nacidosMuertos" value="' + ciclo.nacidosMuertos + '"></div>' +
+                  '<div class="field"><label>Momificados</label><input type="number" min="0" id="f_nacidosMomificados" value="' + ciclo.nacidosMomificados + '"></div>' +
+                '</div>' +
+                '<div class="field"><label>Peso promedio al nacer (kg)</label><input type="number" step="0.01" min="0" id="f_pesoNacimiento" value="' + ciclo.pesoNacimiento + '"></div>' +
+              '</div>' +
+            '</details>' +
+
+            '<details><summary>Destete <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg></summary>' +
+              '<div class="details-inner">' +
+                '<div class="row2">' +
+                  '<div class="field"><label>Fecha de destete</label><input type="date" id="f_fechaDestete" value="' + ciclo.fechaDestete + '"></div>' +
+                  '<div class="field"><label>Lechones destetados</label><input type="number" min="0" id="f_lechonesDestetados" value="' + ciclo.lechonesDestetados + '"></div>' +
+                '</div>' +
+                '<div class="field"><label>Peso promedio al destete (kg)</label><input type="number" step="0.01" min="0" id="f_pesoDestete" value="' + ciclo.pesoDestete + '"></div>' +
+              '</div>' +
+            '</details>' +
+
+            '<details><summary>Sanidad <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg></summary>' +
+              '<div class="details-inner">' +
+                '<div id="sanidadList">' + sanidadRows(ciclo) + '</div>' +
+                '<div class="add-sanidad">' +
+                  '<input type="date" id="f_sanFecha" value="' + todayISO() + '">' +
+                  '<input type="text" id="f_sanDesc" placeholder="Ej: vacuna parvovirus, tratamiento mastitis...">' +
+                  '<button class="iconbtn" id="btnAddSanidad"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></button>' +
+                '</div>' +
+              '</div>' +
+            '</details>' +
+
+            '<details><summary>Observaciones <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg></summary>' +
+              '<div class="details-inner">' +
+                '<div class="field"><textarea id="f_observaciones" placeholder="Notas generales...">' + escapeHtml(ciclo.observaciones) + '</textarea></div>' +
+              '</div>' +
+            '</details>' +
+
+            '<details><summary>Historial de ciclos (' + c.historial.length + ') <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg></summary>' +
+              '<div class="details-inner">' + historialRows(c.historial) + '</div>' +
+            '</details>' +
+
+          '</div>' +
+          '<div class="panel-footer">' +
+            '<button class="btn secondary" id="btnNuevoCiclo" style="flex:1;">Iniciar nuevo ciclo</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+
+    bindDetailEvents(c);
+  }
+
+  function bindDetailEvents(c){
+    var overlay = document.getElementById('overlayDetail');
+    overlay.addEventListener('mousedown', function(ev){ if(ev.target === overlay) closeDetail(); });
+    document.getElementById('btnClose').onclick = closeDetail;
+
+    document.getElementById('btnDelete').onclick = function(){
+      if(confirm('¿Eliminar la ficha de la chancha N.º ' + (c.numero || '?') + '? Esta acción no se puede deshacer.')){
+        state.chanchas = state.chanchas.filter(function(x){ return x.id !== c.id; });
+        state.activeId = null;
+        persist();
+        render();
+      }
+    };
+
+    function bindField(id, prop, target, isNumeric){
+      var el = document.getElementById(id);
+      if(!el) return;
+      el.addEventListener('change', function(){
+        target[prop] = el.value;
+        if(id === 'f_fechaServicio' && el.value){
+          ciclo0().fechaProbableParto = addDaysISO(el.value, GESTACION_DIAS);
+        }
+        persist();
+        render();
+      });
+    }
+    function ciclo0(){ return c.ciclo; }
+
+    bindField('f_numero','numero', c);
+    bindField('f_raza','raza', c);
+    bindField('f_fechaServicio','fechaServicio', c.ciclo);
+    bindField('f_fechaProbableParto','fechaProbableParto', c.ciclo);
+    bindField('f_fechaRealParto','fechaRealParto', c.ciclo);
+    bindField('f_nacidosVivos','nacidosVivos', c.ciclo);
+    bindField('f_nacidosMuertos','nacidosMuertos', c.ciclo);
+    bindField('f_nacidosMomificados','nacidosMomificados', c.ciclo);
+    bindField('f_pesoNacimiento','pesoNacimiento', c.ciclo);
+    bindField('f_fechaDestete','fechaDestete', c.ciclo);
+    bindField('f_lechonesDestetados','lechonesDestetados', c.ciclo);
+    bindField('f_pesoDestete','pesoDestete', c.ciclo);
+    bindField('f_observaciones','observaciones', c.ciclo);
+
+    document.getElementById('btnAddSanidad').onclick = function(){
+      var fecha = document.getElementById('f_sanFecha').value || todayISO();
+      var desc = document.getElementById('f_sanDesc').value.trim();
+      if(!desc) return;
+      c.ciclo.sanidad.push({fecha: fecha, descripcion: desc});
+      persist();
+      renderModal();
+    };
+    Array.prototype.forEach.call(document.querySelectorAll('[data-del-san]'), function(btn){
+      btn.onclick = function(){
+        var i = parseInt(btn.getAttribute('data-del-san'), 10);
+        c.ciclo.sanidad.splice(i,1);
+        persist();
+        renderModal();
+      };
+    });
+
+    document.getElementById('btnNuevoCiclo').onclick = function(){
+      if(!c.ciclo.fechaServicio){ alert('Todavía no hay datos cargados en el ciclo actual.'); return; }
+      if(confirm('Esto archiva el ciclo actual en el historial y deja la ficha lista para un nuevo servicio. ¿Continuar?')){
+        c.historial.push(c.ciclo);
+        c.ciclo = nuevoCiclo();
+        persist();
+        renderModal();
+        renderGrid();
+      }
+    };
+  }
+
+  function closeDetail(){ state.activeId = null; modalRoot.innerHTML=''; renderGrid(); }
+
+  // ---------- settings / backup modal ----------
+  function renderSettingsModal(){
+    if(!state.settingsOpen) return '';
+    return '<div class="overlay center" id="overlaySettings">' +
+      '<div class="panel settings-panel" style="max-width:520px;">' +
+        '<div class="panel-header"><h2>Copia de seguridad</h2>' +
+          '<button class="iconbtn" id="btnCloseSettings"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>' +
+        '<div class="panel-body">' +
+          (!hasStorage ? '<div class="hint" style="color:var(--warn);margin-bottom:14px;">El guardado automático no está disponible en este navegador. Exportá seguido para no perder tus datos.</div>' : '') +
+          '<div class="hint" style="margin-bottom:14px;">Los datos quedan guardados en este mismo navegador/tablet. Si limpiás el historial o los datos del navegador, se pierden — por eso conviene exportar de vez en cuando como respaldo, y volver a importar si alguna vez cambiás de dispositivo.</div>' +
+          '<div class="field"><label>Exportar (copiar y guardar en otro lugar)</label>' +
+          '<textarea id="exportBox" readonly>' + escapeHtml(JSON.stringify(state.chanchas)) + '</textarea>' +
+          '<button class="btn secondary" id="btnCopy" style="margin-top:8px;">Seleccionar todo para copiar</button></div>' +
+          '<div class="field"><label>Importar (pegar copia y reemplazar datos actuales)</label>' +
+          '<textarea id="importBox" placeholder="Pegá acá el texto exportado..."></textarea>' +
+          '<button class="btn secondary" id="btnImport" style="margin-top:8px;">Importar y reemplazar</button></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+  function bindSettingsEvents(){
+    if(!state.settingsOpen) return;
+    var overlay = document.getElementById('overlaySettings');
+    overlay.addEventListener('mousedown', function(ev){ if(ev.target === overlay){ state.settingsOpen=false; modalRoot.innerHTML=''; } });
+    document.getElementById('btnCloseSettings').onclick = function(){ state.settingsOpen=false; modalRoot.innerHTML=''; };
+    document.getElementById('btnCopy').onclick = function(){
+      var box = document.getElementById('exportBox');
+      box.focus(); box.select();
+      try{ document.execCommand('copy'); }catch(e){}
+      try{ navigator.clipboard && navigator.clipboard.writeText(box.value); }catch(e){}
+    };
+    document.getElementById('btnImport').onclick = function(){
+      var txt = document.getElementById('importBox').value.trim();
+      if(!txt) return;
+      try{
+        var data = JSON.parse(txt);
+        if(!Array.isArray(data)) throw new Error('formato inválido');
+        if(confirm('Esto reemplaza todos los datos actuales por los importados. ¿Continuar?')){
+          state.chanchas = data;
+          persist();
+          state.settingsOpen = false;
+          modalRoot.innerHTML = '';
+          renderGrid();
+        }
+      }catch(e){
+        alert('No se pudo leer el texto pegado. Revisá que sea una copia exportada desde esta misma app.');
+      }
+    };
+  }
+
+  // ---------- global events ----------
+  document.getElementById('btnNueva').onclick = function(){
+    var numero = prompt('Número de la chancha:');
+    if(numero === null) return;
+    var c = nuevaChancha(numero.trim());
+    state.chanchas.push(c);
+    persist();
+    state.activeId = c.id;
+    renderGrid();
+    renderModal();
+  };
+  document.getElementById('btnSettings').onclick = function(){
+    state.settingsOpen = true;
+    renderModal();
+  };
+  document.getElementById('searchInput').addEventListener('input', function(){
+    state.search = this.value;
+    renderGrid();
+  });
+  document.getElementById('filterSelect').addEventListener('change', function(){
+    state.filter = this.value;
+    renderGrid();
+  });
+  grid.addEventListener('click', function(ev){
+    var btn = ev.target.closest('[data-open]');
+    if(!btn) return;
+    state.activeId = btn.getAttribute('data-open');
+    renderModal();
+  });
+
+  function render(){
+    renderGrid();
+    renderModal();
+  }
+
+  load();
+})();
+</script>
+</body>
+</html>
