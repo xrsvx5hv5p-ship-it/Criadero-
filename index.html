@@ -155,7 +155,7 @@
 
   /* ---------- overlay / modal ---------- */
   .overlay{
-    position:fixed;inset:0;background:rgba(0,0,0,.55);
+    position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(0,0,0,.55);
     z-index:50;display:flex;justify-content:flex-end;
   }
   .overlay.center{justify-content:center;align-items:center;padding:16px;}
@@ -468,9 +468,16 @@
     }).join('');
   }
 
+  function findById(list, id){
+    for(var i=0; i<list.length; i++){
+      if(list[i].id === id) return list[i];
+    }
+    return null;
+  }
+
   function renderModal(){
     if(!state.activeId){ modalRoot.innerHTML = renderSettingsModal(); bindSettingsEvents(); return; }
-    var c = state.chanchas.find(function(x){ return x.id === state.activeId; });
+    var c = findById(state.chanchas, state.activeId);
     if(!c){ state.activeId = null; modalRoot.innerHTML=''; return; }
     var ciclo = c.ciclo;
     var e = computeEstado(ciclo);
@@ -705,8 +712,16 @@
     state.filter = this.value;
     renderGrid();
   });
+  function findAncestorWithAttr(el, attr){
+    while(el && el !== document){
+      if(el.getAttribute && el.getAttribute(attr)) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+
   grid.addEventListener('click', function(ev){
-    var btn = ev.target.closest('[data-open]');
+    var btn = findAncestorWithAttr(ev.target, 'data-open');
     if(!btn) return;
     state.activeId = btn.getAttribute('data-open');
     renderModal();
