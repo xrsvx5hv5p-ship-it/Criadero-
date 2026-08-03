@@ -36,11 +36,12 @@
     background:var(--bg);
     color:var(--text);
     font-family:'Public Sans',system-ui,sans-serif;
+    font-size:18px;
     -webkit-tap-highlight-color:transparent;
     min-height:100vh;
   }
   h1,h2,h3{font-family:'Zilla Slab',serif;margin:0;}
-  input,textarea,select,button{font-family:inherit;font-size:16px;color:var(--text);}
+  input,textarea,select,button{font-family:inherit;font-size:18px;color:var(--text);}
   input,textarea,select{
     background:#FFFFFF;
     border:1px solid var(--line);
@@ -49,7 +50,7 @@
     width:100%;
   }
   input:focus,textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:0;}
-  label{display:block;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--text-dim);margin-bottom:5px;font-weight:600;}
+  label{display:block;font-size:14.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--text-dim);margin-bottom:5px;font-weight:600;}
   button{cursor:pointer;border:none;font-weight:600;}
   .field{margin-bottom:14px;}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
@@ -65,8 +66,8 @@
   }
   .brand{display:flex;align-items:center;gap:10px;flex:1;min-width:0;}
   .brand svg{flex-shrink:0;}
-  .brand h1{font-size:21px;font-weight:700;color:var(--text);letter-spacing:.01em;}
-  .brand .sub{font-size:11.5px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-top:1px;}
+  .brand h1{font-size:24px;font-weight:700;color:var(--text);letter-spacing:.01em;}
+  .brand .sub{font-size:13.5px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-top:1px;}
   .iconbtn{
     background:var(--surface-2);
     border:1px solid var(--line);
@@ -82,7 +83,7 @@
     border-radius:8px;
     padding:11px 16px;
     display:flex;align-items:center;gap:7px;
-    font-size:14.5px;
+    font-size:16.5px;
     white-space:nowrap;
   }
   .btn.secondary{background:var(--surface-2);color:var(--text);border:1px solid var(--line);}
@@ -109,7 +110,7 @@
     text-align:center;padding:60px 20px;color:var(--text-dim);
   }
   .empty-state svg{opacity:.5;margin-bottom:14px;}
-  .empty-state p{font-size:15px;max-width:320px;margin:0 auto;}
+  .empty-state p{font-size:17px;max-width:340px;margin:0 auto;}
 
   .card{
     background:var(--surface);
@@ -126,18 +127,17 @@
   }
   .card .num{
     font-family:'IBM Plex Mono',monospace;
-    font-size:24px;font-weight:600;color:var(--text);
+    font-size:27px;font-weight:600;color:var(--text);
     display:flex;align-items:baseline;gap:6px;
   }
-  .card .num small{font-size:12px;color:var(--text-dim);font-weight:400;}
-  .card .raza{font-size:13px;color:var(--text-dim);margin-top:2px;min-height:16px;}
+  .card .num small{font-size:14px;color:var(--text-dim);font-weight:400;}
   .stamp{
     position:absolute;top:12px;right:-6px;
     border:2px solid var(--stamp-color,var(--empty));
     color:var(--stamp-color,var(--empty));
     font-family:'Zilla Slab',serif;
     font-weight:700;
-    font-size:10.5px;
+    font-size:12px;
     letter-spacing:.06em;
     text-transform:uppercase;
     padding:3px 9px 2px;
@@ -146,11 +146,11 @@
     background:rgba(122,46,34,.07);
   }
   .card .dateline{
-    margin-top:14px;font-size:12.5px;color:var(--text-dim);
+    margin-top:14px;font-size:14.5px;color:var(--text-dim);
     border-top:1px dashed var(--line);padding-top:10px;
   }
   .card .dateline b{color:var(--text);font-weight:600;}
-  .card .litter{font-family:'IBM Plex Mono',monospace;font-size:12px;margin-top:6px;color:var(--text-dim);}
+  .card .litter{font-family:'IBM Plex Mono',monospace;font-size:14px;margin-top:6px;color:var(--text-dim);}
   .card .litter b{color:var(--accent);}
 
   /* ---------- overlay / modal ---------- */
@@ -173,7 +173,7 @@
     border-bottom:1px solid var(--line);
     padding:16px;display:flex;align-items:center;gap:12px;z-index:2;
   }
-  .panel-header h2{font-size:19px;flex:1;}
+  .panel-header h2{font-size:22px;flex:1;}
   .panel-body{padding:16px;}
 
   details{
@@ -182,7 +182,7 @@
   }
   details[open]{padding-bottom:14px;}
   summary{
-    padding:13px 14px;font-family:'Zilla Slab',serif;font-weight:600;font-size:15.5px;
+    padding:14px 14px;font-family:'Zilla Slab',serif;font-weight:600;font-size:17.5px;
     cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;
     color:var(--text);
   }
@@ -190,21 +190,21 @@
   summary .chev{transition:transform .15s;color:var(--text-dim);}
   details[open] summary .chev{transform:rotate(90deg);}
   .details-inner{padding:2px 14px 4px;}
-  .hint{font-size:11.5px;color:var(--text-dim);margin-top:-8px;margin-bottom:12px;}
+  .hint{font-size:13.5px;color:var(--text-dim);margin-top:-8px;margin-bottom:12px;}
 
   .sanidad-item{
     display:flex;gap:10px;align-items:center;
     background:var(--bg);border:1px solid var(--line);border-radius:6px;
-    padding:9px 10px;margin-bottom:8px;font-size:13.5px;
+    padding:9px 10px;margin-bottom:8px;font-size:15.5px;
   }
-  .sanidad-item .d{font-family:'IBM Plex Mono',monospace;color:var(--accent);font-size:12px;white-space:nowrap;}
+  .sanidad-item .d{font-family:'IBM Plex Mono',monospace;color:var(--accent);font-size:13.5px;white-space:nowrap;}
   .sanidad-item .desc{flex:1;}
   .sanidad-item button{background:none;color:var(--text-dim);padding:4px;}
   .add-sanidad{display:flex;gap:8px;margin-top:8px;}
   .add-sanidad input:first-child{flex:0 0 130px;}
 
   .hist-item{
-    border-left:3px solid var(--line);padding:8px 0 8px 12px;margin-bottom:8px;font-size:13px;color:var(--text-dim);
+    border-left:3px solid var(--line);padding:8px 0 8px 12px;margin-bottom:8px;font-size:15px;color:var(--text-dim);
   }
   .hist-item b{color:var(--text);}
 
@@ -216,23 +216,23 @@
 
   .badge-row{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 18px;}
   .pill{
-    font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+    font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
     padding:5px 10px;border-radius:20px;border:1.5px solid var(--pill-color,var(--empty));
     color:var(--pill-color,var(--empty));
   }
 
   textarea{min-height:80px;resize:vertical;}
 
-  .settings-panel textarea{min-height:160px;font-family:'IBM Plex Mono',monospace;font-size:12px;}
+  .settings-panel textarea{min-height:160px;font-family:'IBM Plex Mono',monospace;font-size:13.5px;}
   .warn-banner{
-    background:var(--warn);color:#2A1E0B;font-size:12.5px;font-weight:600;
+    background:var(--warn);color:#2A1E0B;font-size:14.5px;font-weight:600;
     padding:10px 16px;text-align:center;
   }
 
   @media (max-width:480px){
     .row2,.row3{grid-template-columns:1fr;}
     header{padding:12px;}
-    .brand h1{font-size:18px;}
+    .brand h1{font-size:20px;}
   }
 </style>
 </head>
@@ -250,6 +250,9 @@
       <div class="sub" id="countSub">0 chanchas</div>
     </div>
   </div>
+  <button class="iconbtn" id="btnNotif" title="Notificaciones">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+  </button>
   <button class="iconbtn" id="btnSettings" title="Copia de seguridad">
     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
   </button>
@@ -288,6 +291,7 @@
 
   var STORAGE_KEY = 'chanchas_v1';
   var GESTACION_DIAS = 114;
+  var REPETICION_DIAS = 21;
   var hasStorage = (function(){
     try{
       var t = '__test__';
@@ -303,8 +307,86 @@
     filter: 'todas',
     activeId: null,
     settingsOpen: false,
-    loaded: false
+    loaded: false,
+    repeticionQueue: [],
+    notifiedIds: {},
+    repeticionSnoozedUntil: 0
   };
+
+  // ---------- notificaciones del sistema (con degradación en tablets viejas) ----------
+  var notifSupported = ('Notification' in window) && ('serviceWorker' in navigator);
+  var swRegistration = null;
+
+  function setupNotifications(){
+    if(!notifSupported) return;
+    try{
+      var swCode =
+        "self.addEventListener('install',function(e){self.skipWaiting();});" +
+        "self.addEventListener('activate',function(e){e.waitUntil(self.clients.claim());});" +
+        "self.addEventListener('notificationclick',function(e){" +
+          "e.notification.close();" +
+          "e.waitUntil(self.clients.matchAll({type:'window'}).then(function(list){" +
+            "for(var i=0;i<list.length;i++){ if('focus' in list[i]) return list[i].focus(); }" +
+            "if(self.clients.openWindow) return self.clients.openWindow('./');" +
+          "}));" +
+        "});";
+      var blob = new Blob([swCode], {type:'application/javascript'});
+      var swUrl = URL.createObjectURL(blob);
+      navigator.serviceWorker.register(swUrl).then(function(reg){
+        swRegistration = reg;
+      }).catch(function(){ swRegistration = null; });
+    }catch(e){ /* tablet vieja: seguimos solo con el aviso dentro de la app */ }
+  }
+
+  function notifyRepeticion(cantidad){
+    if(!notifSupported || Notification.permission !== 'granted') return;
+    var titulo = 'Paridera — Revisar repetición';
+    var cuerpo = cantidad === 1 ?
+      'Hay 1 chancha para revisar posible repetición.' :
+      'Hay ' + cantidad + ' chanchas para revisar posible repetición.';
+    try{
+      if(swRegistration && swRegistration.showNotification){
+        swRegistration.showNotification(titulo, {body: cuerpo, tag:'repeticion', renotify:true});
+      } else if(window.Notification){
+        new Notification(titulo, {body: cuerpo});
+      }
+    }catch(e){ /* si falla, el aviso dentro de la app sigue funcionando igual */ }
+  }
+
+  function pedirPermisoNotificaciones(){
+    if(!notifSupported){
+      alert('Este navegador/tablet no soporta notificaciones del sistema. Los avisos van a seguir apareciendo dentro de la app cada vez que la abras.');
+      return;
+    }
+    if(Notification.permission === 'granted'){
+      alert('Las notificaciones ya están activadas.');
+      return;
+    }
+    if(Notification.permission === 'denied'){
+      alert('Las notificaciones están bloqueadas para esta app. Para activarlas hay que habilitarlas desde los ajustes del navegador (ícono del candado o menú > Configuración del sitio > Notificaciones).');
+      return;
+    }
+    Notification.requestPermission().then(function(perm){
+      if(perm === 'granted'){
+        alert('Listo, notificaciones activadas.');
+      } else {
+        alert('No se activaron las notificaciones. Los avisos van a seguir apareciendo dentro de la app cuando la abras.');
+      }
+    });
+  }
+
+  function periodicCheck(){
+    checkRepeticiones();
+    var nuevos = state.repeticionQueue.filter(function(id){ return !state.notifiedIds[id]; });
+    if(nuevos.length){
+      nuevos.forEach(function(id){ state.notifiedIds[id] = true; });
+      notifyRepeticion(nuevos.length);
+    }
+    var puedeMostrarModal = state.repeticionQueue.length && !state.activeId && !state.settingsOpen &&
+      Date.now() > state.repeticionSnoozedUntil;
+    if(puedeMostrarModal){ renderModal(); }
+    else { renderGrid(); }
+  }
 
   // ---------- utils ----------
   function uid(){ return 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
@@ -335,11 +417,12 @@
       fechaServicio:'', fechaProbableParto:'', fechaRealParto:'',
       nacidosVivos:'', nacidosMuertos:'', nacidosMomificados:'',
       pesoNacimiento:'', fechaDestete:'', lechonesDestetados:'', pesoDestete:'',
-      sanidad: [], observaciones:''
+      sanidad: [], observaciones:'',
+      repeticionProximaFecha:'', repeticionConfirmada:false
     };
   }
   function nuevaChancha(numero){
-    return { id: uid(), numero: numero || '', raza:'', creada: todayISO(), ciclo: nuevoCiclo(), historial: [] };
+    return { id: uid(), numero: numero || '', creada: todayISO(), ciclo: nuevoCiclo(), historial: [] };
   }
 
   function computeEstado(ciclo){
@@ -373,6 +456,20 @@
   }
 
   // ---------- persistence (localStorage: queda guardado en este navegador/tablet) ----------
+  function checkRepeticiones(){
+    var today = todayISO();
+    var queue = [];
+    state.chanchas.forEach(function(c){
+      var ciclo = c.ciclo;
+      if(ciclo.fechaServicio && !ciclo.fechaRealParto && !ciclo.repeticionConfirmada && ciclo.repeticionProximaFecha){
+        if(daysDiff(today, ciclo.repeticionProximaFecha) >= 0){
+          queue.push(c.id);
+        }
+      }
+    });
+    state.repeticionQueue = queue;
+  }
+
   function persist(){
     if(!hasStorage){ return; }
     try{
@@ -393,7 +490,14 @@
       if(raw){ state.chanchas = JSON.parse(raw); }
     }catch(e){ state.chanchas = []; }
     state.loaded = true;
+    checkRepeticiones();
+    state.repeticionQueue.forEach(function(id){ state.notifiedIds[id] = true; });
+    if(state.repeticionQueue.length) notifyRepeticion(state.repeticionQueue.length);
     render();
+    setInterval(periodicCheck, 15 * 60 * 1000);
+    document.addEventListener('visibilitychange', function(){
+      if(!document.hidden) periodicCheck();
+    });
   }
 
   // ---------- rendering: grid ----------
@@ -436,7 +540,6 @@
       return '<button class="card" data-open="' + c.id + '" style="--tab-color:' + e.color + '">' +
         '<span class="stamp" style="--stamp-color:' + e.color + '">' + e.label + '</span>' +
         '<div class="num">N.º ' + escapeHtml(c.numero || '?') + '</div>' +
-        '<div class="raza">' + escapeHtml(c.raza || '') + '</div>' +
         litter +
         '<div class="dateline">' + dateline(c.ciclo, e.key) + '</div>' +
         '</button>';
@@ -474,6 +577,11 @@
   }
 
   function renderModal(){
+    if(state.repeticionQueue.length){
+      modalRoot.innerHTML = renderRepeticionModal();
+      bindRepeticionEvents();
+      return;
+    }
     if(!state.activeId){ modalRoot.innerHTML = renderSettingsModal(); bindSettingsEvents(); return; }
     var c = findById(state.chanchas, state.activeId);
     if(!c){ state.activeId = null; modalRoot.innerHTML=''; return; }
@@ -494,10 +602,7 @@
 
             '<details open><summary>Datos generales <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg></summary>' +
               '<div class="details-inner">' +
-                '<div class="row2">' +
-                  '<div class="field"><label>Número de chancha</label><input type="text" id="f_numero" value="' + escapeHtml(c.numero) + '"></div>' +
-                  '<div class="field"><label>Raza</label><input type="text" id="f_raza" value="' + escapeHtml(c.raza) + '"></div>' +
-                '</div>' +
+                '<div class="field"><label>Número de chancha</label><input type="text" id="f_numero" value="' + escapeHtml(c.numero) + '"></div>' +
               '</div>' +
             '</details>' +
 
@@ -583,8 +688,18 @@
       if(!el) return;
       el.addEventListener('change', function(){
         target[prop] = el.value;
-        if(id === 'f_fechaServicio' && el.value){
-          ciclo0().fechaProbableParto = addDaysISO(el.value, GESTACION_DIAS);
+        if(id === 'f_fechaServicio'){
+          if(el.value){
+            ciclo0().fechaProbableParto = addDaysISO(el.value, GESTACION_DIAS);
+            ciclo0().repeticionProximaFecha = addDaysISO(el.value, REPETICION_DIAS);
+            ciclo0().repeticionConfirmada = false;
+          } else {
+            ciclo0().repeticionProximaFecha = '';
+            ciclo0().repeticionConfirmada = false;
+          }
+        }
+        if(id === 'f_fechaRealParto' && el.value){
+          ciclo0().repeticionConfirmada = true;
         }
         persist();
         render();
@@ -593,7 +708,6 @@
     function ciclo0(){ return c.ciclo; }
 
     bindField('f_numero','numero', c);
-    bindField('f_raza','raza', c);
     bindField('f_fechaServicio','fechaServicio', c.ciclo);
     bindField('f_fechaProbableParto','fechaProbableParto', c.ciclo);
     bindField('f_fechaRealParto','fechaRealParto', c.ciclo);
@@ -636,6 +750,56 @@
   }
 
   function closeDetail(){ state.activeId = null; modalRoot.innerHTML=''; renderGrid(); }
+
+  // ---------- repetición (posible retorno a celo) modal ----------
+  function renderRepeticionModal(){
+    var c = findById(state.chanchas, state.repeticionQueue[0]);
+    if(!c){
+      state.repeticionQueue.shift();
+      return renderRepeticionModal();
+    }
+    var restantes = state.repeticionQueue.length - 1;
+    return '<div class="overlay center" id="overlayRepeticion">' +
+      '<div class="panel settings-panel" style="max-width:420px;">' +
+        '<div class="panel-header"><h2>Revisar posible repetición</h2></div>' +
+        '<div class="panel-body">' +
+          '<div class="hint" style="margin-bottom:14px;font-size:15.5px;">' +
+            'Chancha N.º <b>' + escapeHtml(c.numero || '?') + '</b> — servicio el <b>' + fmt(c.ciclo.fechaServicio) + '</b>. ' +
+            'Ya pasaron ' + REPETICION_DIAS + ' días. ¿Sigue preñada?' +
+          '</div>' +
+          '<div style="display:flex;gap:10px;">' +
+            '<button class="btn" id="btnRepSi" style="flex:1;">Sí, sigue preñada</button>' +
+            '<button class="btn secondary" id="btnRepNo" style="flex:1;">No</button>' +
+          '</div>' +
+          '<button class="btn secondary" id="btnRepLuego" style="width:100%;margin-top:10px;">Preguntarme más tarde</button>' +
+          (restantes > 0 ? '<div class="hint" style="margin-top:12px;text-align:center;">Quedan ' + restantes + ' ficha(s) más por revisar.</div>' : '') +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+  function bindRepeticionEvents(){
+    var c = findById(state.chanchas, state.repeticionQueue[0]);
+    if(!c) return;
+    document.getElementById('btnRepSi').onclick = function(){
+      c.ciclo.repeticionConfirmada = true;
+      delete state.notifiedIds[c.id];
+      state.repeticionQueue.shift();
+      persist();
+      render();
+    };
+    document.getElementById('btnRepNo').onclick = function(){
+      c.ciclo.repeticionProximaFecha = addDaysISO(todayISO(), REPETICION_DIAS);
+      delete state.notifiedIds[c.id];
+      state.repeticionQueue.shift();
+      persist();
+      render();
+    };
+    document.getElementById('btnRepLuego').onclick = function(){
+      state.repeticionSnoozedUntil = Date.now() + 60 * 60 * 1000;
+      state.repeticionQueue.shift();
+      render();
+    };
+  }
 
   // ---------- settings / backup modal ----------
   function renderSettingsModal(){
@@ -702,6 +866,8 @@
     state.settingsOpen = true;
     renderModal();
   };
+  document.getElementById('btnNotif').onclick = pedirPermisoNotificaciones;
+  setupNotifications();
   document.getElementById('searchInput').addEventListener('input', function(){
     state.search = this.value;
     renderGrid();
