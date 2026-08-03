@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Paridera — Control de chanchas</title>
 <link rel="manifest" href="manifest.json">
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="apple-touch-icon" href="icon-180.png">
 <meta name="mobile-web-app-capable" content="yes">
@@ -33,7 +35,9 @@
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
+    background:#EEE6D3;
     background:var(--bg);
+    color:#241B14;
     color:var(--text);
     font-family:'Public Sans',system-ui,sans-serif;
     font-size:18px;
@@ -59,7 +63,9 @@
   /* ---------- header ---------- */
   header{
     position:sticky;top:0;z-index:20;
+    background:#FAF6E9;
     background:var(--surface);
+    border-bottom:1px solid #D8C9A3;
     border-bottom:1px solid var(--line);
     padding:14px 16px;
     display:flex;align-items:center;gap:14px;
@@ -69,7 +75,9 @@
   .brand h1{font-size:24px;font-weight:700;color:var(--text);letter-spacing:.01em;}
   .brand .sub{font-size:13.5px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-top:1px;}
   .iconbtn{
+    background:#F1E8CF;
     background:var(--surface-2);
+    border:1px solid #D8C9A3;
     border:1px solid var(--line);
     border-radius:8px;
     width:42px;height:42px;
@@ -86,14 +94,14 @@
     font-size:16.5px;
     white-space:nowrap;
   }
-  .btn.secondary{background:var(--surface-2);color:var(--text);border:1px solid var(--line);}
+  .btn.secondary{background:#F1E8CF;background:var(--surface-2);color:#241B14;color:var(--text);border:1px solid #D8C9A3;border:1px solid var(--line);}
   .btn.danger{background:var(--danger);color:#fff;}
   .btn:active{transform:translateY(1px);}
 
   /* ---------- toolbar ---------- */
   .toolbar{
     display:flex;gap:10px;padding:12px 16px;flex-wrap:wrap;
-    border-bottom:1px solid var(--line);background:var(--bg);
+    border-bottom:1px solid #D8C9A3;border-bottom:1px solid var(--line);background:#EEE6D3;background:var(--bg);
     position:sticky;top:73px;z-index:19;
   }
   .toolbar input[type=search]{flex:1;min-width:150px;}
@@ -113,7 +121,9 @@
   .empty-state p{font-size:17px;max-width:340px;margin:0 auto;}
 
   .card{
+    background:#FAF6E9;
     background:var(--surface);
+    border:1px solid #D8C9A3;
     border:1px solid var(--line);
     border-radius:var(--radius);
     padding:16px 14px 14px;
@@ -160,24 +170,27 @@
   }
   .overlay.center{justify-content:center;align-items:center;padding:16px;}
   .panel{
+    background:#EEE6D3;
     background:var(--bg);
     width:100%;max-width:560px;height:100%;
     overflow-y:auto;
+    border-left:1px solid #D8C9A3;
     border-left:1px solid var(--line);
   }
   .overlay.center .panel{
     height:auto;max-height:90vh;border-left:none;border-radius:12px;border:1px solid var(--line);
   }
   .panel-header{
-    position:sticky;top:0;background:var(--surface);
+    position:sticky;top:0;background:#FAF6E9;background:var(--surface);
+    border-bottom:1px solid #D8C9A3;
     border-bottom:1px solid var(--line);
     padding:16px;display:flex;align-items:center;gap:12px;z-index:2;
   }
   .panel-header h2{font-size:22px;flex:1;}
-  .panel-body{padding:16px;}
+  .panel-body{padding:16px;background:#EEE6D3;background:var(--bg);}
 
   details{
-    background:var(--surface);border:1px solid var(--line);
+    background:#FAF6E9;background:var(--surface);border:1px solid #D8C9A3;border:1px solid var(--line);
     border-radius:8px;margin-bottom:10px;overflow:hidden;
   }
   details[open]{padding-bottom:14px;}
@@ -194,7 +207,7 @@
 
   .sanidad-item{
     display:flex;gap:10px;align-items:center;
-    background:var(--bg);border:1px solid var(--line);border-radius:6px;
+    background:#EEE6D3;background:var(--bg);border:1px solid #D8C9A3;border:1px solid var(--line);border-radius:6px;
     padding:9px 10px;margin-bottom:8px;font-size:15.5px;
   }
   .sanidad-item .d{font-family:'IBM Plex Mono',monospace;color:var(--accent);font-size:13.5px;white-space:nowrap;}
@@ -209,7 +222,8 @@
   .hist-item b{color:var(--text);}
 
   .panel-footer{
-    position:sticky;bottom:0;background:var(--surface);
+    position:sticky;bottom:0;background:#FAF6E9;background:var(--surface);
+    border-top:1px solid #D8C9A3;
     border-top:1px solid var(--line);padding:14px 16px;
     display:flex;gap:10px;
   }
@@ -290,6 +304,7 @@
   'use strict';
 
   var STORAGE_KEY = 'chanchas_v1';
+  var SYNC_KEY = 'chanchas_sync_v1';
   var GESTACION_DIAS = 114;
   var REPETICION_DIAS = 21;
   var hasStorage = (function(){
@@ -470,13 +485,139 @@
     state.repeticionQueue = queue;
   }
 
-  function persist(){
-    if(!hasStorage){ return; }
+  // ---------- sincronización entre dispositivos (Firebase Firestore, opcional) ----------
+  var syncState = { enabled:false, config:null, code:'', db:null, docRef:null, unsubscribe:null, lastJSON:null, pushTimer:null };
+
+  function firebaseDisponible(){
+    return typeof firebase !== 'undefined' && !!firebase.apps;
+  }
+  function cargarConfigSync(){
+    if(!hasStorage) return null;
     try{
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.chanchas));
-    }catch(e){
-      alert('No se pudo guardar (memoria del navegador llena o bloqueada). Hacé una exportación de respaldo desde el ícono de ajustes.');
+      var raw = localStorage.getItem(SYNC_KEY);
+      return raw ? JSON.parse(raw) : null;
+    }catch(e){ return null; }
+  }
+  function guardarConfigSync(cfg){
+    if(!hasStorage) return;
+    try{ localStorage.setItem(SYNC_KEY, JSON.stringify(cfg)); }catch(e){}
+  }
+  function borrarConfigSync(){
+    if(!hasStorage) return;
+    try{ localStorage.removeItem(SYNC_KEY); }catch(e){}
+  }
+  function parsearConfigFirebase(texto){
+    try{ return JSON.parse(texto); }catch(e){}
+    try{
+      var obj = (new Function('return (' + texto + ');'))();
+      if(obj && typeof obj === 'object') return obj;
+    }catch(e){}
+    return null;
+  }
+  function saveLocalOnly(){
+    if(!hasStorage) return;
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state.chanchas)); }catch(e){}
+  }
+
+  function activarListenerSync(){
+    if(syncState.unsubscribe){ syncState.unsubscribe(); }
+    syncState.unsubscribe = syncState.docRef.onSnapshot(function(doc){
+      if(!doc.exists) return;
+      var data = doc.data();
+      var json = JSON.stringify((data && data.chanchas) || []);
+      if(json === syncState.lastJSON) return; // es el eco de nuestro propio guardado
+      syncState.lastJSON = json;
+      state.chanchas = (data && data.chanchas) || [];
+      saveLocalOnly();
+      checkRepeticiones();
+      render();
+    }, function(){ /* problema de conexión: seguimos con lo que hay en local */ });
+  }
+
+  function pushToSync(){
+    if(!syncState.enabled || !syncState.docRef) return;
+    var json = JSON.stringify(state.chanchas);
+    if(json === syncState.lastJSON) return;
+    syncState.lastJSON = json;
+    clearTimeout(syncState.pushTimer);
+    syncState.pushTimer = setTimeout(function(){
+      syncState.docRef.set({ chanchas: state.chanchas, updatedAt: Date.now() }).catch(function(){});
+    }, 700);
+  }
+
+  function conectarSyncManual(config, code){
+    if(!firebaseDisponible()){
+      alert('No se pudo cargar el servicio de sincronización. Revisá la conexión a internet e intentá de nuevo.');
+      return;
     }
+    try{
+      if(!firebase.apps.length){ firebase.initializeApp(config); }
+      var db = firebase.firestore();
+      var ref = db.collection('paridera_sync').doc(code);
+      ref.get().then(function(snap){
+        var usarRemoto = false;
+        if(snap.exists){
+          usarRemoto = confirm('Ya hay datos guardados en la nube con este código.\n\nAceptar = traer esos datos y reemplazar lo que tenés en este dispositivo.\nCancelar = subir lo que tenés en este dispositivo y reemplazar lo de la nube.');
+        }
+        syncState.db = db;
+        syncState.docRef = ref;
+        syncState.config = config;
+        syncState.code = code;
+        syncState.enabled = true;
+
+        if(usarRemoto){
+          var data = snap.data();
+          state.chanchas = (data && data.chanchas) || [];
+          syncState.lastJSON = JSON.stringify(state.chanchas);
+          saveLocalOnly();
+        } else {
+          syncState.lastJSON = JSON.stringify(state.chanchas);
+          ref.set({ chanchas: state.chanchas, updatedAt: Date.now() });
+        }
+        activarListenerSync();
+        guardarConfigSync({ config: config, code: code });
+        checkRepeticiones();
+        render();
+        alert('Sincronización activada. Usá el mismo código y la misma configuración en los otros dispositivos.');
+      }).catch(function(){
+        alert('No se pudo conectar. Revisá el código, la configuración pegada y la conexión a internet.');
+      });
+    }catch(e){
+      alert('La configuración pegada no es válida. Copiala tal cual la muestra la consola de Firebase.');
+    }
+  }
+
+  function autoReconectarSync(){
+    var saved = cargarConfigSync();
+    if(!saved || !saved.config || !saved.code) return;
+    if(!firebaseDisponible()) return;
+    try{
+      if(!firebase.apps.length){ firebase.initializeApp(saved.config); }
+      syncState.db = firebase.firestore();
+      syncState.docRef = syncState.db.collection('paridera_sync').doc(saved.code);
+      syncState.config = saved.config;
+      syncState.code = saved.code;
+      syncState.enabled = true;
+      syncState.lastJSON = JSON.stringify(state.chanchas);
+      activarListenerSync();
+    }catch(e){ /* tablet vieja o sin red: seguimos solo con datos locales */ }
+  }
+
+  function desconectarSync(){
+    if(syncState.unsubscribe){ syncState.unsubscribe(); }
+    syncState = { enabled:false, config:null, code:'', db:null, docRef:null, unsubscribe:null, lastJSON:null, pushTimer:null };
+    borrarConfigSync();
+  }
+
+  function persist(){
+    if(hasStorage){
+      try{
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state.chanchas));
+      }catch(e){
+        alert('No se pudo guardar (memoria del navegador llena o bloqueada). Hacé una exportación de respaldo desde el ícono de ajustes.');
+      }
+    }
+    pushToSync();
   }
   function load(){
     if(!hasStorage){
@@ -494,6 +635,7 @@
     state.repeticionQueue.forEach(function(id){ state.notifiedIds[id] = true; });
     if(state.repeticionQueue.length) notifyRepeticion(state.repeticionQueue.length);
     render();
+    autoReconectarSync();
     setInterval(periodicCheck, 15 * 60 * 1000);
     document.addEventListener('visibilitychange', function(){
       if(!document.hidden) periodicCheck();
@@ -574,6 +716,14 @@
       if(list[i].id === id) return list[i];
     }
     return null;
+  }
+
+  function numeroDuplicado(numero, excludeId){
+    var n = (numero || '').trim().toLowerCase();
+    if(!n) return false;
+    return state.chanchas.some(function(x){
+      return x.id !== excludeId && (x.numero || '').trim().toLowerCase() === n;
+    });
   }
 
   function renderModal(){
@@ -687,6 +837,14 @@
       var el = document.getElementById(id);
       if(!el) return;
       el.addEventListener('change', function(){
+        if(id === 'f_numero'){
+          var nuevoNumero = el.value.trim();
+          if(nuevoNumero && numeroDuplicado(nuevoNumero, c.id)){
+            alert('Ya existe otra chancha con el número "' + nuevoNumero + '". Borrá esa ficha primero, o poné un número distinto.');
+            el.value = c.numero;
+            return;
+          }
+        }
         target[prop] = el.value;
         if(id === 'f_fechaServicio'){
           if(el.value){
@@ -802,6 +960,20 @@
   }
 
   // ---------- settings / backup modal ----------
+  function renderSyncSection(){
+    if(syncState.enabled){
+      return '<div class="field"><label>Sincronización entre dispositivos</label>' +
+        '<div class="hint" style="color:var(--ok);">Sincronización activa · código: <b>' + escapeHtml(syncState.code) + '</b></div>' +
+        '<button class="btn danger" id="btnSyncOff" style="margin-top:6px;width:100%;">Desvincular este dispositivo</button></div>';
+    }
+    return '<div class="field"><label>Sincronización entre dispositivos</label>' +
+      '<div class="hint">Para que lo que cargues en un dispositivo se actualice solo en los demás, hace falta un proyecto gratuito de Firebase (Google), una sola vez. Pegá acá la configuración que te da la consola de Firebase y elegí un código — poné el mismo código y la misma configuración en todos los dispositivos.</div>' +
+      '<div class="field"><label>Configuración de Firebase (pegar tal cual)</label>' +
+      '<textarea id="syncConfigBox" placeholder="{ apiKey: &quot;...&quot;, projectId: &quot;...&quot;, ... }"></textarea></div>' +
+      '<div class="field"><label>Código de sincronización</label>' +
+      '<input type="text" id="syncCodeBox" placeholder="ej: granjaLosAlamos"></div>' +
+      '<button class="btn" id="btnSyncOn" style="width:100%;">Conectar y sincronizar</button></div>';
+  }
   function renderSettingsModal(){
     if(!state.settingsOpen) return '';
     return '<div class="overlay center" id="overlaySettings">' +
@@ -810,7 +982,8 @@
           '<button class="iconbtn" id="btnCloseSettings"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>' +
         '<div class="panel-body">' +
           (!hasStorage ? '<div class="hint" style="color:var(--warn);margin-bottom:14px;">El guardado automático no está disponible en este navegador. Exportá seguido para no perder tus datos.</div>' : '') +
-          '<div class="hint" style="margin-bottom:14px;">Los datos quedan guardados en este mismo navegador/tablet. Si limpiás el historial o los datos del navegador, se pierden — por eso conviene exportar de vez en cuando como respaldo, y volver a importar si alguna vez cambiás de dispositivo.</div>' +
+          renderSyncSection() +
+          '<div class="hint" style="margin:18px 0 14px;">Además, los datos quedan guardados en este mismo navegador/tablet. Si limpiás el historial o los datos del navegador, se pierden — por eso conviene exportar de vez en cuando como respaldo.</div>' +
           '<div class="field"><label>Exportar (copiar y guardar en otro lugar)</label>' +
           '<textarea id="exportBox" readonly>' + escapeHtml(JSON.stringify(state.chanchas)) + '</textarea>' +
           '<button class="btn secondary" id="btnCopy" style="margin-top:8px;">Seleccionar todo para copiar</button></div>' +
@@ -826,6 +999,23 @@
     var overlay = document.getElementById('overlaySettings');
     overlay.addEventListener('mousedown', function(ev){ if(ev.target === overlay){ state.settingsOpen=false; modalRoot.innerHTML=''; } });
     document.getElementById('btnCloseSettings').onclick = function(){ state.settingsOpen=false; modalRoot.innerHTML=''; };
+    if(syncState.enabled){
+      document.getElementById('btnSyncOff').onclick = function(){
+        if(confirm('¿Desvincular este dispositivo? Vas a dejar de recibir actualizaciones automáticas de los demás, pero los datos que ya tenés acá se mantienen.')){
+          desconectarSync();
+          renderModal();
+        }
+      };
+    } else {
+      document.getElementById('btnSyncOn').onclick = function(){
+        var texto = document.getElementById('syncConfigBox').value.trim();
+        var code = document.getElementById('syncCodeBox').value.trim();
+        if(!texto || !code){ alert('Completá la configuración de Firebase y el código de sincronización.'); return; }
+        var config = parsearConfigFirebase(texto);
+        if(!config){ alert('No se pudo leer la configuración pegada. Copiala tal cual la muestra la consola de Firebase.'); return; }
+        conectarSyncManual(config, code);
+      };
+    }
     document.getElementById('btnCopy').onclick = function(){
       var box = document.getElementById('exportBox');
       box.focus(); box.select();
@@ -855,7 +1045,13 @@
   document.getElementById('btnNueva').onclick = function(){
     var numero = prompt('Número de la chancha:');
     if(numero === null) return;
-    var c = nuevaChancha(numero.trim());
+    numero = numero.trim();
+    while(numero && numeroDuplicado(numero, null)){
+      numero = prompt('Ya existe una chancha con el número "' + numero + '". Si es la misma, borrá esa ficha primero; si no, poné un número distinto.\n\nNúmero de la chancha:');
+      if(numero === null) return;
+      numero = numero.trim();
+    }
+    var c = nuevaChancha(numero);
     state.chanchas.push(c);
     persist();
     state.activeId = c.id;
