@@ -529,7 +529,7 @@
       saveLocalOnly();
       checkRepeticiones();
       render();
-    }, function(){ /* problema de conexión: seguimos con lo que hay en local */ });
+    }, function(err){ console.error('Error de sincronización (listener):', err); /* problema de conexión: seguimos con lo que hay en local */ });
   }
 
   function pushToSync(){
@@ -576,11 +576,18 @@
         checkRepeticiones();
         render();
         alert('Sincronización activada. Poné el mismo código en los otros dispositivos.');
-      }).catch(function(){
-        alert('No se pudo conectar. Revisá el código y la conexión a internet.');
+      }).catch(function(err){
+        console.error('Error de sincronización (get):', err);
+        var motivo = (err && err.code) ? ' (' + err.code + ')' : '';
+        if(err && err.code === 'permission-denied'){
+          alert('No se pudo conectar: permiso denegado' + motivo + '.\n\nEsto pasa cuando las reglas de seguridad de Firestore no permiten leer/escribir. Hay que revisarlas en la consola de Firebase, en el proyecto "' + FIREBASE_CONFIG.projectId + '" → Firestore Database → Reglas.');
+        } else {
+          alert('No se pudo conectar. Revisá el código y la conexión a internet.' + motivo);
+        }
       });
     }catch(e){
-      alert('No se pudo conectar la sincronización.');
+      console.error('Error de sincronización (conectar):', e);
+      alert('No se pudo conectar la sincronización: ' + (e && e.message ? e.message : e));
     }
   }
 
