@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Paridera — Control de chanchas</title>
 <link rel="manifest" href="manifest.json">
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="apple-touch-icon" href="icon-180.png">
 <meta name="mobile-web-app-capable" content="yes">
@@ -494,12 +492,57 @@
     state.repeticionQueue = queue;
   }
 
-  // ---------- sincronización entre dispositivos (Firebase Firestore, opcional) ----------
-  var syncState = { enabled:false, code:'', db:null, docRef:null, unsubscribe:null, lastJSON:null, pushTimer:null };
+  // ---------- sincronización entre dispositivos (API REST de Firestore, sin SDK) ----------
+  // Se usan pedidos HTTP simples (XMLHttpRequest) en vez del SDK pesado de Firebase,
+  // para que funcione también en navegadores/tablets viejos que no soportan JS moderno.
+  var syncState = { enabled:false, code:'', lastJSON:null, pushTimer:null, pollTimer:null };
+  var POLL_MS = 6000; // cada cuánto se revisa si hay cambios de otros dispositivos
 
-  function firebaseDisponible(){
-    return typeof firebase !== 'undefined' && !!firebase.apps;
+  function firestoreDocUrl(code){
+    return 'https://firestore.googleapis.com/v1/projects/' + FIREBASE_CONFIG.projectId +
+      '/databases/(default)/documents/paridera_sync/' + encodeURIComponent(code) +
+      '?key=' + FIREBASE_CONFIG.apiKey;
   }
+
+  // pedido HTTP compatible con navegadores viejos (sin depender de fetch)
+  function httpRequest(method, url, bodyObj, cb){
+    try{
+      var xhr = new XMLHttpRequest();
+      xhr.open(method, url, true);
+      if(bodyObj) xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.onreadystatechange = function(){
+        if(xhr.readyState !== 4) return;
+        if(xhr.status >= 200 && xhr.status < 300){
+          var data = null;
+          try{ data = xhr.responseText ? JSON.parse(xhr.responseText) : null; }catch(e){}
+          cb(null, data, xhr.status);
+        } else if(xhr.status === 404){
+          cb(null, null, 404);
+        } else {
+          var msg = 'HTTP ' + xhr.status;
+          try{
+            var errData = JSON.parse(xhr.responseText);
+            if(errData && errData.error && errData.error.message) msg = errData.error.message + ' (' + xhr.status + ')';
+          }catch(e){}
+          cb(new Error(msg), null, xhr.status);
+        }
+      };
+      xhr.onerror = function(){ cb(new Error('Error de red')); };
+      xhr.send(bodyObj ? JSON.stringify(bodyObj) : null);
+    }catch(e){ cb(e); }
+  }
+
+  function docToChanchas(doc){
+    if(!doc || !doc.fields || !doc.fields.chanchas || typeof doc.fields.chanchas.stringValue !== 'string') return [];
+    try{ return JSON.parse(doc.fields.chanchas.stringValue) || []; }catch(e){ return []; }
+  }
+  function chanchasToBody(){
+    return { fields: {
+      chanchas: { stringValue: JSON.stringify(state.chanchas) },
+      updatedAt: { integerValue: String(Date.now()) }
+    }};
+  }
+
   function cargarCodigoSync(){
     if(!hasStorage) return '';
     try{ return localStorage.getItem(SYNC_KEY) || ''; }catch(e){ return ''; }
@@ -517,98 +560,97 @@
     try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state.chanchas)); }catch(e){}
   }
 
-  function activarListenerSync(){
-    if(syncState.unsubscribe){ syncState.unsubscribe(); }
-    syncState.unsubscribe = syncState.docRef.onSnapshot(function(doc){
-      if(!doc.exists) return;
-      var data = doc.data();
-      var json = JSON.stringify((data && data.chanchas) || []);
-      if(json === syncState.lastJSON) return; // es el eco de nuestro propio guardado
-      syncState.lastJSON = json;
-      state.chanchas = (data && data.chanchas) || [];
-      saveLocalOnly();
-      checkRepeticiones();
-      render();
-    }, function(err){ console.error('Error de sincronización (listener):', err); /* problema de conexión: seguimos con lo que hay en local */ });
+  function detenerPolling(){
+    if(syncState.pollTimer){ clearInterval(syncState.pollTimer); syncState.pollTimer = null; }
+  }
+  function iniciarPolling(){
+    detenerPolling();
+    syncState.pollTimer = setInterval(function(){
+      if(!syncState.enabled) return;
+      httpRequest('GET', firestoreDocUrl(syncState.code), null, function(err, doc, status){
+        if(err || status === 404) return; // problema pasajero o todavía no hay nada: seguimos con lo local
+        var remotas = docToChanchas(doc);
+        var json = JSON.stringify(remotas);
+        if(json === syncState.lastJSON) return; // sin cambios, o es el eco de nuestro propio guardado
+        syncState.lastJSON = json;
+        state.chanchas = remotas;
+        saveLocalOnly();
+        checkRepeticiones();
+        render();
+      });
+    }, POLL_MS);
   }
 
   function pushToSync(){
-    if(!syncState.enabled || !syncState.docRef) return;
+    if(!syncState.enabled || !syncState.code) return;
     var json = JSON.stringify(state.chanchas);
     if(json === syncState.lastJSON) return;
     syncState.lastJSON = json;
     clearTimeout(syncState.pushTimer);
     syncState.pushTimer = setTimeout(function(){
-      syncState.docRef.set({ chanchas: state.chanchas, updatedAt: Date.now() }).catch(function(){});
+      httpRequest('PATCH', firestoreDocUrl(syncState.code), chanchasToBody(), function(err){
+        if(err) console.error('Error de sincronización (subir cambios):', err);
+        /* si falla, se reintenta solo en el próximo cambio o en el próximo poll */
+      });
     }, 700);
   }
 
   function conectarSyncManual(code){
-    if(!firebaseDisponible()){
-      alert('No se pudo conectar la sincronización. Revisá la conexión a internet e intentá de nuevo.');
-      return;
-    }
-    try{
-      if(!firebase.apps.length){ firebase.initializeApp(FIREBASE_CONFIG); }
-      var db = firebase.firestore();
-      var ref = db.collection('paridera_sync').doc(code);
-      ref.get().then(function(snap){
-        var usarRemoto = false;
-        if(snap.exists){
-          usarRemoto = confirm('Ya hay datos guardados en la nube con este código.\n\nAceptar = traer esos datos y reemplazar lo que tenés en este dispositivo.\nCancelar = subir lo que tenés en este dispositivo y reemplazar lo de la nube.');
-        }
-        syncState.db = db;
-        syncState.docRef = ref;
-        syncState.code = code;
-        syncState.enabled = true;
+    httpRequest('GET', firestoreDocUrl(code), null, function(err, doc, status){
+      if(err){
+        console.error('Error de sincronización (conectar):', err);
+        alert('No se pudo conectar: ' + err.message + '\n\nRevisá el código y la conexión a internet. Si el error dice "permission-denied" o similar, hay que revisar las reglas de seguridad de Firestore en la consola de Firebase (proyecto "' + FIREBASE_CONFIG.projectId + '").');
+        return;
+      }
+      var hayRemoto = (status !== 404);
+      var usarRemoto = false;
+      if(hayRemoto){
+        usarRemoto = confirm('Ya hay datos guardados en la nube con este código.\n\nAceptar = traer esos datos y reemplazar lo que tenés en este dispositivo.\nCancelar = subir lo que tenés en este dispositivo y reemplazar lo de la nube.');
+      }
+      syncState.code = code;
+      syncState.enabled = true;
 
-        if(usarRemoto){
-          var data = snap.data();
-          state.chanchas = (data && data.chanchas) || [];
-          syncState.lastJSON = JSON.stringify(state.chanchas);
-          saveLocalOnly();
-        } else {
-          syncState.lastJSON = JSON.stringify(state.chanchas);
-          ref.set({ chanchas: state.chanchas, updatedAt: Date.now() });
-        }
-        activarListenerSync();
+      function terminarConexion(){
+        iniciarPolling();
         guardarCodigoSync(code);
         checkRepeticiones();
         render();
         alert('Sincronización activada. Poné el mismo código en los otros dispositivos.');
-      }).catch(function(err){
-        console.error('Error de sincronización (get):', err);
-        var motivo = (err && err.code) ? ' (' + err.code + ')' : '';
-        if(err && err.code === 'permission-denied'){
-          alert('No se pudo conectar: permiso denegado' + motivo + '.\n\nEsto pasa cuando las reglas de seguridad de Firestore no permiten leer/escribir. Hay que revisarlas en la consola de Firebase, en el proyecto "' + FIREBASE_CONFIG.projectId + '" → Firestore Database → Reglas.');
-        } else {
-          alert('No se pudo conectar. Revisá el código y la conexión a internet.' + motivo);
-        }
-      });
-    }catch(e){
-      console.error('Error de sincronización (conectar):', e);
-      alert('No se pudo conectar la sincronización: ' + (e && e.message ? e.message : e));
-    }
+      }
+
+      if(usarRemoto){
+        state.chanchas = docToChanchas(doc);
+        syncState.lastJSON = JSON.stringify(state.chanchas);
+        saveLocalOnly();
+        terminarConexion();
+      } else {
+        syncState.lastJSON = JSON.stringify(state.chanchas);
+        httpRequest('PATCH', firestoreDocUrl(code), chanchasToBody(), function(err2){
+          if(err2){
+            console.error('Error de sincronización (subida inicial):', err2);
+            syncState.enabled = false;
+            alert('No se pudo subir los datos a la nube: ' + err2.message);
+            return;
+          }
+          terminarConexion();
+        });
+      }
+    });
   }
 
   function autoReconectarSync(){
     var code = cargarCodigoSync();
     if(!code) return;
-    if(!firebaseDisponible()) return;
-    try{
-      if(!firebase.apps.length){ firebase.initializeApp(FIREBASE_CONFIG); }
-      syncState.db = firebase.firestore();
-      syncState.docRef = syncState.db.collection('paridera_sync').doc(code);
-      syncState.code = code;
-      syncState.enabled = true;
-      syncState.lastJSON = JSON.stringify(state.chanchas);
-      activarListenerSync();
-    }catch(e){ /* tablet vieja o sin red: seguimos solo con datos locales */ }
+    syncState.code = code;
+    syncState.enabled = true;
+    syncState.lastJSON = JSON.stringify(state.chanchas);
+    iniciarPolling();
   }
 
   function desconectarSync(){
-    if(syncState.unsubscribe){ syncState.unsubscribe(); }
-    syncState = { enabled:false, code:'', db:null, docRef:null, unsubscribe:null, lastJSON:null, pushTimer:null };
+    detenerPolling();
+    clearTimeout(syncState.pushTimer);
+    syncState = { enabled:false, code:'', lastJSON:null, pushTimer:null, pollTimer:null };
     borrarCodigoSync();
   }
 
