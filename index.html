@@ -305,6 +305,15 @@
 
   var STORAGE_KEY = 'chanchas_v1';
   var SYNC_KEY = 'chanchas_sync_v1';
+  var FIREBASE_CONFIG = {
+    apiKey: "AIzaSyBRg0-rMBlyQdUjMJrQ-U73_Mshdjyrfwo",
+    authDomain: "criadero-el-capricho.firebaseapp.com",
+    projectId: "criadero-el-capricho",
+    storageBucket: "criadero-el-capricho.firebasestorage.app",
+    messagingSenderId: "73413190852",
+    appId: "1:73413190852:web:872de980c8bb745f05d591",
+    measurementId: "G-SL2BY5K7PH"
+  };
   var GESTACION_DIAS = 114;
   var REPETICION_DIAS = 21;
   var hasStorage = (function(){
@@ -486,33 +495,22 @@
   }
 
   // ---------- sincronización entre dispositivos (Firebase Firestore, opcional) ----------
-  var syncState = { enabled:false, config:null, code:'', db:null, docRef:null, unsubscribe:null, lastJSON:null, pushTimer:null };
+  var syncState = { enabled:false, code:'', db:null, docRef:null, unsubscribe:null, lastJSON:null, pushTimer:null };
 
   function firebaseDisponible(){
     return typeof firebase !== 'undefined' && !!firebase.apps;
   }
-  function cargarConfigSync(){
-    if(!hasStorage) return null;
-    try{
-      var raw = localStorage.getItem(SYNC_KEY);
-      return raw ? JSON.parse(raw) : null;
-    }catch(e){ return null; }
+  function cargarCodigoSync(){
+    if(!hasStorage) return '';
+    try{ return localStorage.getItem(SYNC_KEY) || ''; }catch(e){ return ''; }
   }
-  function guardarConfigSync(cfg){
+  function guardarCodigoSync(code){
     if(!hasStorage) return;
-    try{ localStorage.setItem(SYNC_KEY, JSON.stringify(cfg)); }catch(e){}
+    try{ localStorage.setItem(SYNC_KEY, code); }catch(e){}
   }
-  function borrarConfigSync(){
+  function borrarCodigoSync(){
     if(!hasStorage) return;
     try{ localStorage.removeItem(SYNC_KEY); }catch(e){}
-  }
-  function parsearConfigFirebase(texto){
-    try{ return JSON.parse(texto); }catch(e){}
-    try{
-      var obj = (new Function('return (' + texto + ');'))();
-      if(obj && typeof obj === 'object') return obj;
-    }catch(e){}
-    return null;
   }
   function saveLocalOnly(){
     if(!hasStorage) return;
@@ -545,13 +543,13 @@
     }, 700);
   }
 
-  function conectarSyncManual(config, code){
+  function conectarSyncManual(code){
     if(!firebaseDisponible()){
-      alert('No se pudo cargar el servicio de sincronización. Revisá la conexión a internet e intentá de nuevo.');
+      alert('No se pudo conectar la sincronización. Revisá la conexión a internet e intentá de nuevo.');
       return;
     }
     try{
-      if(!firebase.apps.length){ firebase.initializeApp(config); }
+      if(!firebase.apps.length){ firebase.initializeApp(FIREBASE_CONFIG); }
       var db = firebase.firestore();
       var ref = db.collection('paridera_sync').doc(code);
       ref.get().then(function(snap){
@@ -561,7 +559,6 @@
         }
         syncState.db = db;
         syncState.docRef = ref;
-        syncState.config = config;
         syncState.code = code;
         syncState.enabled = true;
 
@@ -575,28 +572,27 @@
           ref.set({ chanchas: state.chanchas, updatedAt: Date.now() });
         }
         activarListenerSync();
-        guardarConfigSync({ config: config, code: code });
+        guardarCodigoSync(code);
         checkRepeticiones();
         render();
-        alert('Sincronización activada. Usá el mismo código y la misma configuración en los otros dispositivos.');
+        alert('Sincronización activada. Poné el mismo código en los otros dispositivos.');
       }).catch(function(){
-        alert('No se pudo conectar. Revisá el código, la configuración pegada y la conexión a internet.');
+        alert('No se pudo conectar. Revisá el código y la conexión a internet.');
       });
     }catch(e){
-      alert('La configuración pegada no es válida. Copiala tal cual la muestra la consola de Firebase.');
+      alert('No se pudo conectar la sincronización.');
     }
   }
 
   function autoReconectarSync(){
-    var saved = cargarConfigSync();
-    if(!saved || !saved.config || !saved.code) return;
+    var code = cargarCodigoSync();
+    if(!code) return;
     if(!firebaseDisponible()) return;
     try{
-      if(!firebase.apps.length){ firebase.initializeApp(saved.config); }
+      if(!firebase.apps.length){ firebase.initializeApp(FIREBASE_CONFIG); }
       syncState.db = firebase.firestore();
-      syncState.docRef = syncState.db.collection('paridera_sync').doc(saved.code);
-      syncState.config = saved.config;
-      syncState.code = saved.code;
+      syncState.docRef = syncState.db.collection('paridera_sync').doc(code);
+      syncState.code = code;
       syncState.enabled = true;
       syncState.lastJSON = JSON.stringify(state.chanchas);
       activarListenerSync();
@@ -605,8 +601,8 @@
 
   function desconectarSync(){
     if(syncState.unsubscribe){ syncState.unsubscribe(); }
-    syncState = { enabled:false, config:null, code:'', db:null, docRef:null, unsubscribe:null, lastJSON:null, pushTimer:null };
-    borrarConfigSync();
+    syncState = { enabled:false, code:'', db:null, docRef:null, unsubscribe:null, lastJSON:null, pushTimer:null };
+    borrarCodigoSync();
   }
 
   function persist(){
@@ -967,9 +963,7 @@
         '<button class="btn danger" id="btnSyncOff" style="margin-top:6px;width:100%;">Desvincular este dispositivo</button></div>';
     }
     return '<div class="field"><label>Sincronización entre dispositivos</label>' +
-      '<div class="hint">Para que lo que cargues en un dispositivo se actualice solo en los demás, hace falta un proyecto gratuito de Firebase (Google), una sola vez. Pegá acá la configuración que te da la consola de Firebase y elegí un código — poné el mismo código y la misma configuración en todos los dispositivos.</div>' +
-      '<div class="field"><label>Configuración de Firebase (pegar tal cual)</label>' +
-      '<textarea id="syncConfigBox" placeholder="{ apiKey: &quot;...&quot;, projectId: &quot;...&quot;, ... }"></textarea></div>' +
+      '<div class="hint">Poné un código (el mismo en todos los dispositivos que quieras mantener sincronizados) y tocá Conectar. No hace falta pegar nada más.</div>' +
       '<div class="field"><label>Código de sincronización</label>' +
       '<input type="text" id="syncCodeBox" placeholder="ej: granjaLosAlamos"></div>' +
       '<button class="btn" id="btnSyncOn" style="width:100%;">Conectar y sincronizar</button></div>';
@@ -1008,12 +1002,9 @@
       };
     } else {
       document.getElementById('btnSyncOn').onclick = function(){
-        var texto = document.getElementById('syncConfigBox').value.trim();
         var code = document.getElementById('syncCodeBox').value.trim();
-        if(!texto || !code){ alert('Completá la configuración de Firebase y el código de sincronización.'); return; }
-        var config = parsearConfigFirebase(texto);
-        if(!config){ alert('No se pudo leer la configuración pegada. Copiala tal cual la muestra la consola de Firebase.'); return; }
-        conectarSyncManual(config, code);
+        if(!code){ alert('Escribí un código de sincronización.'); return; }
+        conectarSyncManual(code);
       };
     }
     document.getElementById('btnCopy').onclick = function(){
